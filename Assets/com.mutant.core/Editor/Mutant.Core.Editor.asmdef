@@ -1,0 +1,10 @@
+{
+  "name": "Mutant.Core.Editor",
+  "rootNamespace": "Mutant.Core.Editor",
+  "references": [
+    "Mutant.Core"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ]
+}
