@@ -18,6 +18,9 @@ Mutant Core 是 Mutant 框架的基础包，提供：
 
 ## 安装
 
+使用Upm进行GitURL安装：
+https://github.com/BillStewartzhiwei/Mutant.git?path=/Packages/com.mutant.core#main
+
 将本包放到：
 
 Packages/com.mutant.core
