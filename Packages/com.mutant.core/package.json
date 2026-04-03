@@ -2,11 +2,15 @@
   "name": "com.mutant.core",
   "version": "0.2.0",
   "displayName": "Mutant Core",
-  "descriptionUrl": "https://github.com/BillStewartzhiwei/Mutant/blob/main/Packages/com.mutant.core/README.md",
+  "description": "Core runtime, bootstrap, module system, and event bus for Mutant.",
   "unity": "2022.3",
   "author": {
-    "name": "Bill Stewart"
+    "name": "Bill Stewart",
+    "url": "https://github.com/BillStewartzhiwei"
   },
+  "documentationUrl": "https://github.com/BillStewartzhiwei/Mutant/tree/main/Packages/com.mutant.core/Documentation~",
+  "changelogUrl": "https://github.com/BillStewartzhiwei/Mutant/blob/main/Packages/com.mutant.core/CHANGELOG.md",
+  "licensesUrl": "https://github.com/BillStewartzhiwei/Mutant/blob/main/Packages/com.mutant.core/LICENSE.md",
   "samples": [
     {
       "displayName": "Basic Usage",
