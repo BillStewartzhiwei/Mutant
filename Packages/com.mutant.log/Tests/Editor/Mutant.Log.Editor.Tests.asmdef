@@ -1,0 +1,13 @@
+{
+  "name": "Mutant.Log.Editor.Tests",
+  "references": [
+    "Mutant.Log",
+    "Mutant.Log.Editor"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ]
+}

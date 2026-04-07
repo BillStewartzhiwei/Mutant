@@ -1,0 +1,7 @@
+{
+  "name": "Mutant.Log",
+  "rootNamespace": "Mutant.Log",
+  "references": [
+    "Mutant.Core"
+  ]
+}

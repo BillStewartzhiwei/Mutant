@@ -1,0 +1,10 @@
+{
+  "name": "Mutant.Log.Editor",
+  "rootNamespace": "Mutant.Log.Editor",
+  "references": [
+    "Mutant.Log"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ]
+}
