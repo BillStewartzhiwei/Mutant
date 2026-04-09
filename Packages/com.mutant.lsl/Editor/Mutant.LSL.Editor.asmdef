@@ -1,0 +1,10 @@
+{
+  "name": "Mutant.LSL.Editor",
+  "rootNamespace": "Mutant.LSL.Editor",
+  "references": [
+    "Mutant.LSL"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ]
+}

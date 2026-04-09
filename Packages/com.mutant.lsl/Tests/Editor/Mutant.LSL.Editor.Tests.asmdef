@@ -1,0 +1,13 @@
+{
+  "name": "Mutant.LSL.Editor.Tests",
+  "references": [
+    "Mutant.LSL",
+    "Mutant.LSL.Editor"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ]
+}
