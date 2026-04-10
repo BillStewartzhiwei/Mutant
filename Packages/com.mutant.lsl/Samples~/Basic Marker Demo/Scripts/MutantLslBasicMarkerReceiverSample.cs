@@ -14,6 +14,7 @@ namespace Mutant.LSL.Samples
 
         private void Start()
         {
+            MutantLogger.Info(MutantLogCategories.LSL, "Receiver started.");
             MutantLslModule lslModule = ModuleManager.Instance.GetModule<MutantLslModule>();
             if (lslModule == null || !lslModule.IsInitialized)
             {

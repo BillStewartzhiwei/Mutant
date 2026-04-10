@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Mutant.Core.Modules;
+using Mutant.Log.API;
 using Mutant.Log.Config;
 using Mutant.Log.Models;
 using Mutant.Log.Services;
@@ -51,6 +52,51 @@ namespace Mutant.Log.Modules
 
             ActiveService = new MutantLogService(_runtimeSettingsAsset.minimumSeverity);
 
+            AttachConfiguredSinks();
+
+            ActiveService.Write(
+                MutantLogSeverity.Info,
+                MutantLogCategories.Log,
+                "MutantLogModule initialized.");
+        }
+
+        protected override void OnDispose()
+        {
+            string exportedFolderPath = _fileSinkInstance != null ? _fileSinkInstance.AbsoluteFolderPath : null;
+            string exportedFilePath = _fileSinkInstance != null ? _fileSinkInstance.AbsoluteFilePath : null;
+
+            if (ActiveService != null)
+            {
+                ActiveService.Write(
+                    MutantLogSeverity.Info,
+                    MutantLogCategories.Log,
+                    "MutantLogModule disposed.");
+
+                ActiveService.Flush();
+                ActiveService.Dispose();
+                ActiveService = null;
+            }
+
+            _memorySinkInstance = null;
+            _consoleSinkInstance = null;
+            _fileSinkInstance = null;
+
+            if (!string.IsNullOrEmpty(exportedFolderPath))
+                Debug.Log("[MutantLogModule] Log export folder: " + exportedFolderPath);
+
+            if (!string.IsNullOrEmpty(exportedFilePath))
+                Debug.Log("[MutantLogModule] Log export file: " + exportedFilePath);
+
+            if (_ownsFallbackSettingsAsset && _runtimeSettingsAsset != null)
+            {
+                UnityEngine.Object.Destroy(_runtimeSettingsAsset);
+                _runtimeSettingsAsset = null;
+                _ownsFallbackSettingsAsset = false;
+            }
+        }
+
+        private void AttachConfiguredSinks()
+        {
             if (_runtimeSettingsAsset.enableUnityConsoleSink)
             {
                 _consoleSinkInstance = new MutantUnityConsoleLogSink();
@@ -73,43 +119,6 @@ namespace Mutant.Log.Modules
 
                 ActiveService.AddSink(_fileSinkInstance);
             }
-
-            ActiveService.Write(MutantLogSeverity.Info, "Log", "MutantLogModule initialized.");
-        }
-
-        protected override void OnDispose()
-        {
-           	string exportedFolderPath = _fileSinkInstance != null ? _fileSinkInstance.AbsoluteFolderPath : null;
-    		string exportedFilePath = _fileSinkInstance != null ? _fileSinkInstance.AbsoluteFilePath : null;
-
-    		if (ActiveService != null)
-    		{
-        		ActiveService.Write(MutantLogSeverity.Info, "Log", "MutantLogModule disposed.");
-        		ActiveService.Flush();
-        		ActiveService.Dispose();
-        		ActiveService = null;
-    		}
-
-    		if (!string.IsNullOrEmpty(exportedFolderPath))
-    		{
-        		Debug.Log("[MutantLogModule] Log export folder: " + exportedFolderPath);
-    		}
-
-    		if (!string.IsNullOrEmpty(exportedFilePath))
-    		{
-        		Debug.Log("[MutantLogModule] Log export file: " + exportedFilePath);
-    		}
-
-    		_memorySinkInstance = null;
-    		_consoleSinkInstance = null;
-    		_fileSinkInstance = null;
-
-    		if (_ownsFallbackSettingsAsset && _runtimeSettingsAsset != null)
-    		{
-        		UnityEngine.Object.Destroy(_runtimeSettingsAsset);
-        		_runtimeSettingsAsset = null;
-        		_ownsFallbackSettingsAsset = false;
-    		}
         }
     }
 }

@@ -1,58 +1,27 @@
 using UnityEngine;
-using Mutant.Core.Modules;
-using Mutant.Core.Events;
+using Mutant.Log.API;
+using Mutant.Log.Modules;
 
-public class CoreTestEntry : MonoBehaviour
+namespace Mutant.Log.Samples.BasicLogging
 {
-	private void Start()
-	{
-		ModuleManager.Instance.Register(new DummyModule());
+    public sealed class LoggingSampleEntry : MonoBehaviour
+    {
+        private void Start()
+        {
+            MutantLogger.Info(MutantLogCategories.Log, "Basic logging sample started.");
+            MutantLogger.Warning(MutantLogCategories.Log, "This is a warning record.");
+            MutantLogger.Error(MutantLogCategories.Log, "This is an error record.");
 
-		EventBus.Subscribe<TestEvent>(OnTestEvent);
-		EventBus.Publish(new TestEvent { Message = "Hello Mutant Core" });
-	}
+            var bufferedRecords = MutantLogModule.GetBufferedRecordSnapshot();
+            Debug.Log("[LoggingSampleEntry] Buffered record count = " + bufferedRecords.Count);
 
-	private void OnDestroy()
-	{
-		EventBus.Unsubscribe<TestEvent>(OnTestEvent);
-	}
-
-	private void OnTestEvent(TestEvent evt)
-	{
-		Debug.Log("[CoreTestEntry] Event Received: " + evt.Message);
-	}
-
-	private sealed class DummyModule : IModule
-	{
-		public string Name
-		{
-			get;
-		}
-		public int Priority => 0;
-		public bool IsInitialized
-		{
-			get;
-		}
-
-		public void Init()
-		{
-			Debug.Log("[DummyModule] Init");
-		}
-
-		public void Update() { }
-
-		public void LateUpdate() { }
-
-		public void FixedUpdate() { }
-
-		public void Dispose()
-		{
-			Debug.Log("[DummyModule] Dispose");
-		}
-	}
-
-	private struct TestEvent
-	{
-		public string Message;
-	}
+            if (bufferedRecords.Count > 0)
+            {
+                var lastRecord = bufferedRecords[bufferedRecords.Count - 1];
+                Debug.Log(
+                    "[LoggingSampleEntry] Last buffered record = " +
+                    $"[{lastRecord.Severity}] [{lastRecord.CategoryText}] {lastRecord.MessageText}");
+            }
+        }
+    }
 }

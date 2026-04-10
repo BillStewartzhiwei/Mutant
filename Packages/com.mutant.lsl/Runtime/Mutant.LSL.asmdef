@@ -2,7 +2,8 @@
     "name": "Mutant.LSL",
     "rootNamespace": "Mutant.LSL",
     "references": [
-        "Mutant.Core"
+        "Mutant.Core",
+        "Mutant.Log"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
