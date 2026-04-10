@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using Mutant.Log.Models;
 using Mutant.Log.Modules;
@@ -31,28 +32,48 @@ namespace Mutant.Log.API
             WriteInternal(MutantLogSeverity.Fatal, categoryText, messageText, null);
         }
 
-        public static void ErrorWithException(string categoryText, string messageText, System.Exception exceptionValue)
+        public static void Exception(string categoryText, Exception exceptionValue, string messageText = null)
         {
+            string resolvedMessage =
+                string.IsNullOrWhiteSpace(messageText)
+                    ? exceptionValue?.Message ?? "Exception"
+                    : messageText;
+
             WriteInternal(
                 MutantLogSeverity.Error,
                 categoryText,
-                messageText,
-                exceptionValue == null ? null : exceptionValue.ToString());
+                resolvedMessage,
+                exceptionValue?.ToString());
+        }
+
+        public static void Log(MutantLogSeverity severity, string categoryText, string messageText)
+        {
+            WriteInternal(severity, categoryText, messageText, null);
+        }
+
+        public static void Trace(string messageText)
+        {
+            Trace(MutantLogCategories.General, messageText);
         }
 
         public static void Info(string messageText)
         {
-            WriteInternal(MutantLogSeverity.Info, "General", messageText, null);
+            Info(MutantLogCategories.General, messageText);
         }
 
         public static void Warning(string messageText)
         {
-            WriteInternal(MutantLogSeverity.Warning, "General", messageText, null);
+            Warning(MutantLogCategories.General, messageText);
         }
 
         public static void Error(string messageText)
         {
-            WriteInternal(MutantLogSeverity.Error, "General", messageText, null);
+            Error(MutantLogCategories.General, messageText);
+        }
+
+        public static void Fatal(string messageText)
+        {
+            Fatal(MutantLogCategories.General, messageText);
         }
 
         private static void WriteInternal(
@@ -67,8 +88,13 @@ namespace Mutant.Log.API
                 return;
             }
 
-            string fallbackText =
-                $"[{severity}] [{(string.IsNullOrWhiteSpace(categoryText) ? "General" : categoryText)}] {messageText}";
+            string resolvedCategory =
+                string.IsNullOrWhiteSpace(categoryText)
+                    ? MutantLogCategories.General
+                    : categoryText;
+
+            string resolvedMessage = messageText ?? string.Empty;
+            string fallbackText = $"[{severity}] [{resolvedCategory}] {resolvedMessage}";
 
             if (!string.IsNullOrEmpty(exceptionText))
                 fallbackText += "\n" + exceptionText;

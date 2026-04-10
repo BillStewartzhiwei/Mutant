@@ -8,27 +8,25 @@ Mutant Log 是 Mutant 的日志包，提供：
 - Console / In-Memory / File 三种日志输出目标
 - 与 `com.mutant.core` 的模块系统集成
 
+---
+
 ## 功能
 
-- 日志分级
-- 多路输出
-- 运行时内存缓存
-- 文件落盘
-- 与 ModuleManager 集成
+- 日志分级：`Trace / Info / Warning / Error / Fatal`
+- 统一公开 API：业务模块只依赖 `MutantLogger`
+- 多路输出：控制台、内存缓存、文件
+- 运行时日志缓冲快照
+- 与 `ModuleManager` 生命周期集成
 
-## 使用方式
+---
 
-1. 在场景中确保已经有 `CoreBootstrap`
-2. 创建一个 `MutantLogRuntimeSettings` 资源
-3. 创建一个物体并挂载 `MutantLogModuleInstaller`
-4. 将设置资源拖入 Installer
-5. 运行场景后通过 `MutantLogger` 输出日志
+## 公开 API
 
-## 示例
+推荐所有业务模块都只使用：
 
 ```csharp
 using Mutant.Log.API;
 
-MutantLogger.Info("Experiment", "TrialStart");
-MutantLogger.Warning("VR", "Controller tracking lost");
-MutantLogger.Error("LSL", "Resolve failed");
+MutantLogger.Info("Experiment", "Trial started.");
+MutantLogger.Warning("VR", "Controller tracking lost.");
+MutantLogger.Error("LSL", "Resolve failed.");

@@ -5,14 +5,22 @@ using Mutant.Log.Modules;
 
 namespace Mutant.Log.Installers
 {
-	public sealed class MutantLogModuleInstaller : MonoBehaviour
-	{
-		[SerializeField] private MutantLogRuntimeSettings _logSettingsAsset;
+    [DisallowMultipleComponent]
+    public sealed class MutantLogModuleInstaller : MonoBehaviour
+    {
+        [SerializeField] private MutantLogRuntimeSettings _logSettingsAsset;
 
-		private void Awake()
-		{
-			MutantLogModule.Configure(_logSettingsAsset);
-			ModuleManager.Instance.Register<MutantLogModule>();
-		}
-	}
+        private void Awake()
+        {
+            if (_logSettingsAsset == null)
+            {
+                Debug.LogWarning(
+                    "[MutantLogModuleInstaller] Log settings asset is missing. " +
+                    "A runtime fallback settings asset will be used.");
+            }
+
+            MutantLogModule.Configure(_logSettingsAsset);
+            ModuleManager.Instance.Register<MutantLogModule>();
+        }
+    }
 }
