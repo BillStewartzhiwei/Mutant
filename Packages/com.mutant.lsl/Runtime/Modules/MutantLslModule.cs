@@ -1,40 +1,46 @@
-using System;
+using Mutant.Core.Modules;
 
 namespace Mutant.LSL
 {
-	public sealed class MutantLslModule : IDisposable
-	{
-		public static MutantLslModule Current { get; private set; }
+    public sealed class MutantLslModule : IModule
+    {
+        public const string ModuleDisplayName = "Mutant.LSL";
 
-		public IMutantLslService Service { get; }
+        public string Name => ModuleDisplayName;
 
-		public MutantLslModule(IMutantLslService service)
-		{
-			Service = service ?? throw new MutantLslException("MutantLslModule service is null.");
-		}
+        public int Priority => 0;
 
-		public void SetAsCurrent()
-		{
-			Current = this;
-		}
+        public bool IsInitialized { get; private set; }
 
-		public static MutantLslModule CreateDefault(bool setAsCurrent = true)
-		{
-			MutantLslModule module = new MutantLslModule(new MutantLslService());
-			if (setAsCurrent)
-			{
-				module.SetAsCurrent();
-			}
+        public IMutantLslService Service { get; private set; }
 
-			return module;
-		}
+        public void Init()
+        {
+            if (IsInitialized)
+            {
+                return;
+            }
 
-		public void Dispose()
-		{
-			if (ReferenceEquals(Current, this))
-			{
-				Current = null;
-			}
-		}
-	}
+            Service = new MutantLslService();
+            IsInitialized = true;
+        }
+
+        public void Update()
+        {
+        }
+
+        public void LateUpdate()
+        {
+        }
+
+        public void FixedUpdate()
+        {
+        }
+
+        public void Dispose()
+        {
+            Service = null;
+            IsInitialized = false;
+        }
+    }
 }

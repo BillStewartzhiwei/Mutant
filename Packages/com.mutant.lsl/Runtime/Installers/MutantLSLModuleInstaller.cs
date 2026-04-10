@@ -1,10 +1,13 @@
-namespace Mutant.LSL
+using UnityEngine;
+using Mutant.Core.Modules;
+
+namespace Mutant.LSL.Installers
 {
-	public static class MutantLslInstaller
-	{
-		public static MutantLslModule InstallDefault(bool setAsCurrent = true)
-		{
-			return MutantLslModule.CreateDefault(setAsCurrent);
-		}
-	}
+    public sealed class MutantLslModuleInstaller : MonoBehaviour
+    {
+        private void Awake()
+        {
+            ModuleManager.Instance.Register<MutantLslModule>();
+        }
+    }
 }

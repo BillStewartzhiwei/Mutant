@@ -8,7 +8,7 @@
     "name": "Bill Stewart"
   },
   "dependencies": {
-    "com.mutant.core": "0.1.0"
+    "com.mutant.core": "0.2.0"
   },
   "keywords": [
     "mutant",
@@ -16,5 +16,23 @@
     "lab-streaming-layer",
     "vr",
     "experiment"
+  ],
+  "samples": [
+    {
+      "displayName": "Basic Marker Demo",
+      "description": "Minimal logging sample with installer, console sink, memory sink, and file sink.",
+      "path": "Samples~/Basic Marker Demo"
+    },
+    {
+      "displayName": "Basic Resolve Demo",
+      "description": "Minimal logging sample with installer, console sink, memory sink, and file sink.",
+      "path": "Samples~/Basic Resolve Demo"
+    },
+    {
+      "displayName": "Basic Pose Demo",
+      "description": "Minimal logging sample with installer, console sink, memory sink, and file sink.",
+      "path": "Samples~/Basic Pose Demo"
+    }
+    
   ]
 }
