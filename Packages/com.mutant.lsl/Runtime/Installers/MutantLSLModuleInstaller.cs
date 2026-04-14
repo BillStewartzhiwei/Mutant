@@ -7,7 +7,7 @@ namespace Mutant.LSL.Installers
     {
         private void Awake()
         {
-            ModuleManager.Instance.Register<MutantLslModule>();
+            //ModuleManager.Instance.Register<MutantLslModule>();
         }
     }
 }
