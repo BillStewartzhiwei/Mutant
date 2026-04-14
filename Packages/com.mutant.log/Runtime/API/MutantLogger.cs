@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 using Mutant.Log.Models;
-using Mutant.Log.Modules;
+//using Mutant.Log.Modules;
 
 namespace Mutant.Log.API
 {
@@ -82,11 +82,11 @@ namespace Mutant.Log.API
             string messageText,
             string exceptionText)
         {
-            if (MutantLogModule.ActiveService != null)
-            {
-                MutantLogModule.ActiveService.Write(severity, categoryText, messageText, exceptionText);
-                return;
-            }
+            //if (MutantLogModule.ActiveService != null)
+            //{
+            //    MutantLogModule.ActiveService.Write(severity, categoryText, messageText, exceptionText);
+            //    return;
+            //}
 
             string resolvedCategory =
                 string.IsNullOrWhiteSpace(categoryText)

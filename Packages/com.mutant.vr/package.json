@@ -1,0 +1,16 @@
+﻿{
+  "name": "com.mutant.vr",
+  "displayName": "Mutant VR",
+  "version": "0.2.0",
+  "unity": "2022.3",
+  "description": "Conflict-safe first runnable skeleton for Mutant VR with a Core integration example.",
+  "keywords": [
+    "mutant",
+    "vr",
+    "xr"
+  ],
+  "author": {
+    "name": "Bill Stewart"
+  },
+  "dependencies": {}
+}

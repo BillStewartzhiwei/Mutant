@@ -6,7 +6,7 @@ public class CoreTestEntry : MonoBehaviour
 {
 	private void Start()
 	{
-		ModuleManager.Instance.Register(new DummyModule());
+		// ModuleManager.Instance.Register(new DummyModule());
 
 		EventBus.Subscribe<TestEvent>(OnTestEvent);
 		EventBus.Publish(new TestEvent { Message = "Hello Mutant Core" });

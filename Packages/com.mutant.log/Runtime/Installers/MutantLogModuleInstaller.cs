@@ -1,7 +1,7 @@
 using UnityEngine;
 using Mutant.Core.Modules;
 using Mutant.Log.Config;
-using Mutant.Log.Modules;
+//using Mutant.Log.Modules;
 
 namespace Mutant.Log.Installers
 {
@@ -19,8 +19,8 @@ namespace Mutant.Log.Installers
                     "A runtime fallback settings asset will be used.");
             }
 
-            MutantLogModule.Configure(_logSettingsAsset);
-            ModuleManager.Instance.Register<MutantLogModule>();
+            //MutantLogModule.Configure(_logSettingsAsset);
+            //ModuleManager.Instance.Register<MutantLogModule>();
         }
     }
 }

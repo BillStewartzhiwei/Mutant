@@ -75,6 +75,22 @@ namespace Mutant.Core
             return _registry.GetModule<T>();
         }
 
+        public IReadOnlyList<ModuleDescriptor> GetStartedDescriptorsInStartupOrder()
+        {
+            var results = new List<ModuleDescriptor>();
+
+            for (int i = 0; i < _startupPlan.OrderedModules.Count; i++)
+            {
+                var descriptor = _startupPlan.OrderedModules[i];
+                if (GetState(descriptor.ModuleId) == MutantModuleState.Started)
+                {
+                    results.Add(descriptor);
+                }
+            }
+
+            return results.AsReadOnly();
+        }
+
         public void ExecuteRegister()
         {
             for (int i = 0; i < _startupPlan.OrderedModules.Count; i++)
