@@ -8,6 +8,7 @@ namespace Mutant.Core.Bootstrap
         [SerializeField] private bool dontDestroyOnLoad = true;
 
         private static bool _initialized;
+        private bool _isOwner;
 
         private void Awake()
         {
@@ -18,6 +19,7 @@ namespace Mutant.Core.Bootstrap
             }
 
             _initialized = true;
+            _isOwner = true;
 
             if (dontDestroyOnLoad)
                 DontDestroyOnLoad(gameObject);
@@ -42,7 +44,7 @@ namespace Mutant.Core.Bootstrap
 
         private void OnDestroy()
         {
-            if (_initialized)
+            if (_isOwner && _initialized)
             {
                 ModuleManager.Instance.DisposeAll();
                 _initialized = false;
