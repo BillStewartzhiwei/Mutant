@@ -1,0 +1,14 @@
+{
+  "name": "Mutant.Core.PlayModeTests",
+  "rootNamespace": "Mutant.Core.Tests.PlayMode",
+  "references": [
+    "Mutant.Core"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [
+    "Editor"
+  ]
+}

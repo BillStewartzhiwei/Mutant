@@ -1,0 +1,13 @@
+{
+  "name": "Mutant.Core.EditModeTests",
+  "rootNamespace": "Mutant.Core.Tests.EditMode",
+  "references": [
+    "Mutant.Core"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ]
+}

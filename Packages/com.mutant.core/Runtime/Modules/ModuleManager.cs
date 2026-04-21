@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Mutant.Core.Diagnostics;
 
 namespace Mutant.Core.Modules
 {
@@ -23,9 +24,13 @@ namespace Mutant.Core.Modules
 
             _modules.Add(module);
             _modules.Sort((a, b) => a.Priority.CompareTo(b.Priority));
+            CoreRecorder.Record("ModuleManager", $"Register<{module.GetType().Name}>");
 
             if (_initialized)
+            {
                 module.Init();
+                CoreRecorder.Record("ModuleManager", $"Init<{module.GetType().Name}>");
+            }
         }
 
         public void Unregister(IModule module)
@@ -33,8 +38,16 @@ namespace Mutant.Core.Modules
             if (module == null)
                 return;
 
-            if (_modules.Remove(module) && _initialized)
-                module.Dispose();
+            if (_modules.Remove(module))
+            {
+                CoreRecorder.Record("ModuleManager", $"Unregister<{module.GetType().Name}>");
+
+                if (_initialized)
+                {
+                    module.Dispose();
+                    CoreRecorder.Record("ModuleManager", $"Dispose<{module.GetType().Name}>");
+                }
+            }
         }
 
         public T GetModule<T>() where T : class, IModule
@@ -53,9 +66,13 @@ namespace Mutant.Core.Modules
                 return;
 
             _initialized = true;
+            CoreRecorder.Record("ModuleManager", "InitAll");
 
             foreach (var module in _modules)
+            {
                 module.Init();
+                CoreRecorder.Record("ModuleManager", $"Init<{module.GetType().Name}>");
+            }
         }
 
         public void UpdateAll()
@@ -87,14 +104,19 @@ namespace Mutant.Core.Modules
             if (!_initialized)
             {
                 _modules.Clear();
+                CoreRecorder.Record("ModuleManager", "DisposeAll (not initialized)");
                 return;
             }
 
             for (int i = _modules.Count - 1; i >= 0; i--)
+            {
                 _modules[i].Dispose();
+                CoreRecorder.Record("ModuleManager", $"Dispose<{_modules[i].GetType().Name}>");
+            }
 
             _modules.Clear();
             _initialized = false;
+            CoreRecorder.Record("ModuleManager", "DisposeAll");
         }
     }
 }
