@@ -1,63 +1,129 @@
 ﻿using System;
 using System.Collections.Generic;
-using Mutant.Core.Diagnostics;
+using UnityEngine;
 
 namespace Mutant.Core.Events
 {
-	public static class EventBus
-	{
-		private static readonly Dictionary<Type, Delegate> Handlers = new();
+    public static class EventBus
+    {
+        private sealed class Subscription
+        {
+            public Delegate Original;
+            public Action<object> Callback;
+            public bool Once;
+        }
 
-		public static void Subscribe<T>(Action<T> handler)
-		{
-			if (handler == null)
-				return;
+        private static readonly Dictionary<Type, List<Subscription>> Subscriptions = new();
+        private static bool _logEnabled;
 
-			Type type = typeof(T);
+        public static void Configure(bool logEnabled)
+        {
+            _logEnabled = logEnabled;
+        }
 
-			if (Handlers.TryGetValue(type, out Delegate existing))
-				Handlers[type] = Delegate.Combine(existing, handler);
-			else
-				Handlers[type] = handler;
+        public static void Subscribe<T>(Action<T> handler)
+        {
+            AddSubscription(handler, false);
+        }
 
-			CoreRecorder.Record("EventBus", $"Subscribe<{type.Name}>");
-		}
+        public static void SubscribeOnce<T>(Action<T> handler)
+        {
+            AddSubscription(handler, true);
+        }
 
-		public static void Unsubscribe<T>(Action<T> handler)
-		{
-			if (handler == null)
-				return;
+        public static void Unsubscribe<T>(Action<T> handler)
+        {
+            if (handler == null)
+                return;
 
-			Type type = typeof(T);
+            Type type = typeof(T);
 
-			if (!Handlers.TryGetValue(type, out Delegate existing))
-				return;
+            if (!Subscriptions.TryGetValue(type, out List<Subscription> list))
+                return;
 
-			Delegate current = Delegate.Remove(existing, handler);
+            list.RemoveAll(s => Equals(s.Original, handler));
 
-			if (current == null)
-				Handlers.Remove(type);
-			else
-				Handlers[type] = current;
+            if (list.Count == 0)
+                Subscriptions.Remove(type);
+        }
 
-			CoreRecorder.Record("EventBus", $"Unsubscribe<{type.Name}>");
-		}
+        public static bool HasSubscribers<T>()
+        {
+            return Subscriptions.TryGetValue(typeof(T), out List<Subscription> list) && list.Count > 0;
+        }
 
-		public static void Publish<T>(T evt)
-		{
-			Type type = typeof(T);
+        public static void Publish<T>(T evt)
+        {
+            Type type = typeof(T);
 
-			if (Handlers.TryGetValue(type, out Delegate del) && del is Action<T> callback)
-			{
-				callback.Invoke(evt);
-				CoreRecorder.Record("EventBus", $"Publish<{type.Name}>");
-			}
-		}
+            if (!Subscriptions.TryGetValue(type, out List<Subscription> list) || list.Count == 0)
+                return;
 
-		public static void Clear()
-		{
-			Handlers.Clear();
-			CoreRecorder.Record("EventBus", "Clear");
-		}
-	}
+            List<Subscription> snapshot = new(list);
+            List<Subscription> onceToRemove = null;
+
+            foreach (Subscription sub in snapshot)
+            {
+                sub.Callback?.Invoke(evt);
+
+                if (sub.Once)
+                {
+                    onceToRemove ??= new List<Subscription>();
+                    onceToRemove.Add(sub);
+                }
+            }
+
+            if (onceToRemove != null)
+            {
+                foreach (Subscription sub in onceToRemove)
+                    list.Remove(sub);
+
+                if (list.Count == 0)
+                    Subscriptions.Remove(type);
+            }
+
+            Log($"Publish: {type.Name}");
+        }
+
+        public static void Clear<T>()
+        {
+            Subscriptions.Remove(typeof(T));
+        }
+
+        public static void ClearAll()
+        {
+            Subscriptions.Clear();
+        }
+
+        private static void AddSubscription<T>(Action<T> handler, bool once)
+        {
+            if (handler == null)
+                return;
+
+            Type type = typeof(T);
+
+            if (!Subscriptions.TryGetValue(type, out List<Subscription> list))
+            {
+                list = new List<Subscription>();
+                Subscriptions[type] = list;
+            }
+
+            list.Add(new Subscription
+            {
+                Original = handler,
+                Once = once,
+                Callback = payload =>
+                {
+                    if (payload is T cast)
+                        handler.Invoke(cast);
+                }
+            });
+        }
+
+        private static void Log(string message)
+        {
+            if (_logEnabled)
+                Debug.Log("[EventBus] " + message);
+        }
+    }
 }

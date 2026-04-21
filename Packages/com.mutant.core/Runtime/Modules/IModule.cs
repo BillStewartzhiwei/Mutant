@@ -2,7 +2,9 @@
 {
 	public interface IModule
 	{
+		string Name { get; }
 		int Priority { get; }
+		bool IsInitialized { get; }
 
 		void Init();
 		void Update();

@@ -1,0 +1,17 @@
+{
+    "name": "Mutant.LSL",
+    "rootNamespace": "Mutant.LSL",
+    "references": [
+        "Mutant.Core",
+        "Mutant.Log"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

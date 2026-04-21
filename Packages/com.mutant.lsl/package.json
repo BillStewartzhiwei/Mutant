@@ -1,0 +1,38 @@
+{
+  "name": "com.mutant.lsl",
+  "version": "0.1.0",
+  "displayName": "Mutant LSL",
+  "description": "LSL bridge package for the Mutant framework, providing built-in stream definitions, transport wrappers, and Unity-friendly integration.",
+  "unity": "2022.3",
+  "author": {
+    "name": "Bill Stewart"
+  },
+  "dependencies": {
+    "com.mutant.core": "0.2.0"
+  },
+  "keywords": [
+    "mutant",
+    "lsl",
+    "lab-streaming-layer",
+    "vr",
+    "experiment"
+  ],
+  "samples": [
+    {
+      "displayName": "Basic Marker Demo",
+      "description": "Minimal logging sample with installer, console sink, memory sink, and file sink.",
+      "path": "Samples~/Basic Marker Demo"
+    },
+    {
+      "displayName": "Basic Resolve Demo",
+      "description": "Minimal logging sample with installer, console sink, memory sink, and file sink.",
+      "path": "Samples~/Basic Resolve Demo"
+    },
+    {
+      "displayName": "Basic Pose Demo",
+      "description": "Minimal logging sample with installer, console sink, memory sink, and file sink.",
+      "path": "Samples~/Basic Pose Demo"
+    }
+    
+  ]
+}

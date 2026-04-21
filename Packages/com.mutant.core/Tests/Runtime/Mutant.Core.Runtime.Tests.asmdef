@@ -1,0 +1,9 @@
+﻿{
+  "name": "Mutant.Core.Runtime.Tests",
+  "references": [
+    "Mutant.Core"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

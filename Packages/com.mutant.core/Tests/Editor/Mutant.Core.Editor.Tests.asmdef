@@ -1,0 +1,13 @@
+﻿{
+  "name": "Mutant.Core.Editor.Tests",
+  "references": [
+    "Mutant.Core",
+    "Mutant.Core.Editor"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ]
+}

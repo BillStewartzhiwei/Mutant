@@ -1,122 +1,276 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Mutant.Core.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
 
-namespace Mutant.Core.Modules
+namespace Mutant.Core
 {
+    /// <summary>
+    /// 模块生命周期执行器。
+    /// 负责 Register / Init / Start / Stop / Dispose。
+    /// </summary>
     public sealed class ModuleManager
     {
-        private static ModuleManager _instance;
-        public static ModuleManager Instance => _instance ??= new ModuleManager();
+        private readonly ModuleRegistry _registry;
+        private readonly StartupPlan _startupPlan;
+        private readonly Dictionary<string, MutantModuleState> _states =
+            new Dictionary<string, MutantModuleState>(StringComparer.Ordinal);
+        private readonly List<ModuleStartupError> _errors =
+            new List<ModuleStartupError>();
 
-        private readonly List<IModule> _modules = new();
-        private bool _initialized;
-
-        private ModuleManager() { }
-
-        public void Register(IModule module)
+        public ModuleManager(ModuleRegistry registry, StartupPlan startupPlan)
         {
-            if (module == null)
-                return;
-
-            if (_modules.Contains(module))
-                return;
-
-            _modules.Add(module);
-            _modules.Sort((a, b) => a.Priority.CompareTo(b.Priority));
-            CoreRecorder.Record("ModuleManager", $"Register<{module.GetType().Name}>");
-
-            if (_initialized)
+            if (registry == null)
             {
-                module.Init();
-                CoreRecorder.Record("ModuleManager", $"Init<{module.GetType().Name}>");
+                throw new ArgumentNullException(nameof(registry));
+            }
+
+            if (startupPlan == null)
+            {
+                throw new ArgumentNullException(nameof(startupPlan));
+            }
+
+            _registry = registry;
+            _startupPlan = startupPlan;
+
+            var allDescriptors = _registry.GetAllDescriptors();
+            for (int i = 0; i < allDescriptors.Count; i++)
+            {
+                _states[allDescriptors[i].ModuleId] = MutantModuleState.None;
+            }
+
+            for (int i = 0; i < _startupPlan.OrderedModules.Count; i++)
+            {
+                _states[_startupPlan.OrderedModules[i].ModuleId] = MutantModuleState.Resolved;
             }
         }
 
-        public void Unregister(IModule module)
+        public StartupPlan StartupPlan
         {
-            if (module == null)
-                return;
+            get { return _startupPlan; }
+        }
 
-            if (_modules.Remove(module))
+        public IReadOnlyList<ModuleStartupError> Errors
+        {
+            get { return _errors.AsReadOnly(); }
+        }
+
+        public MutantModuleState GetState(string moduleId)
+        {
+            MutantModuleState state;
+            if (_states.TryGetValue(moduleId, out state))
             {
-                CoreRecorder.Record("ModuleManager", $"Unregister<{module.GetType().Name}>");
+                return state;
+            }
 
-                if (_initialized)
+            return MutantModuleState.None;
+        }
+
+        public IMutantModule GetModule(string moduleId)
+        {
+            IMutantModule module;
+            return _registry.TryGetModule(moduleId, out module) ? module : null;
+        }
+
+        public T GetModule<T>() where T : class, IMutantModule
+        {
+            return _registry.GetModule<T>();
+        }
+
+        public IReadOnlyList<ModuleDescriptor> GetStartedDescriptorsInStartupOrder()
+        {
+            var results = new List<ModuleDescriptor>();
+
+            for (int i = 0; i < _startupPlan.OrderedModules.Count; i++)
+            {
+                var descriptor = _startupPlan.OrderedModules[i];
+                if (GetState(descriptor.ModuleId) == MutantModuleState.Started)
                 {
-                    module.Dispose();
-                    CoreRecorder.Record("ModuleManager", $"Dispose<{module.GetType().Name}>");
+                    results.Add(descriptor);
+                }
+            }
+
+            return results.AsReadOnly();
+        }
+
+        public void ExecuteRegister()
+        {
+            for (int i = 0; i < _startupPlan.OrderedModules.Count; i++)
+            {
+                var descriptor = _startupPlan.OrderedModules[i];
+
+                if (GetState(descriptor.ModuleId) == MutantModuleState.Failed)
+                {
+                    continue;
+                }
+
+                TryRunLifecycle(descriptor, "Register", MutantModuleState.Registered, descriptor.Instance.OnRegister);
+            }
+        }
+
+        public void ExecuteInitialize()
+        {
+            for (int b = 0; b < _startupPlan.Batches.Count; b++)
+            {
+                var batch = _startupPlan.Batches[b];
+
+                for (int i = 0; i < batch.Modules.Count; i++)
+                {
+                    var descriptor = batch.Modules[i];
+
+                    if (GetState(descriptor.ModuleId) == MutantModuleState.Failed)
+                    {
+                        continue;
+                    }
+
+                    EnsureDependenciesInitialized(descriptor);
+
+                    SetState(descriptor.ModuleId, MutantModuleState.Initializing);
+                    TryRunLifecycle(descriptor, "Init", MutantModuleState.Initialized, descriptor.Instance.OnInit);
                 }
             }
         }
 
-        public T GetModule<T>() where T : class, IModule
+        public void ExecuteStart()
         {
-            return _modules.OfType<T>().FirstOrDefault();
+            for (int b = 0; b < _startupPlan.Batches.Count; b++)
+            {
+                var batch = _startupPlan.Batches[b];
+
+                for (int i = 0; i < batch.Modules.Count; i++)
+                {
+                    var descriptor = batch.Modules[i];
+
+                    if (GetState(descriptor.ModuleId) == MutantModuleState.Failed)
+                    {
+                        continue;
+                    }
+
+                    EnsureDependenciesStarted(descriptor);
+
+                    SetState(descriptor.ModuleId, MutantModuleState.Starting);
+                    TryRunLifecycle(descriptor, "Start", MutantModuleState.Started, descriptor.Instance.OnStart);
+                }
+            }
         }
 
-        public IReadOnlyList<IModule> GetAllModules()
+        public void ExecuteStop()
         {
-            return _modules;
+            for (int i = _startupPlan.OrderedModules.Count - 1; i >= 0; i--)
+            {
+                var descriptor = _startupPlan.OrderedModules[i];
+                var state = GetState(descriptor.ModuleId);
+
+                if (state != MutantModuleState.Started)
+                {
+                    continue;
+                }
+
+                SetState(descriptor.ModuleId, MutantModuleState.Stopping);
+                TryRunLifecycle(descriptor, "Stop", MutantModuleState.Stopped, descriptor.Instance.OnStop);
+            }
         }
 
-        public void InitAll()
+        public void ExecuteDispose()
         {
-            if (_initialized)
+            for (int i = _startupPlan.OrderedModules.Count - 1; i >= 0; i--)
+            {
+                var descriptor = _startupPlan.OrderedModules[i];
+                var state = GetState(descriptor.ModuleId);
+
+                if (state == MutantModuleState.Disposed || state == MutantModuleState.None)
+                {
+                    continue;
+                }
+
+                SetState(descriptor.ModuleId, MutantModuleState.Disposing);
+                TryRunLifecycle(descriptor, "Dispose", MutantModuleState.Disposed, descriptor.Instance.OnDispose);
+            }
+        }
+
+        private void EnsureDependenciesInitialized(ModuleDescriptor descriptor)
+        {
+            var dependencies = descriptor.Dependencies;
+            if (dependencies == null || dependencies.Count == 0)
+            {
                 return;
+            }
 
-            _initialized = true;
-            CoreRecorder.Record("ModuleManager", "InitAll");
-
-            foreach (var module in _modules)
+            for (int i = 0; i < dependencies.Count; i++)
             {
-                module.Init();
-                CoreRecorder.Record("ModuleManager", $"Init<{module.GetType().Name}>");
+                var dependencyId = dependencies[i];
+                var dependencyState = GetState(dependencyId);
+
+                if (dependencyState == MutantModuleState.Initialized ||
+                    dependencyState == MutantModuleState.Started ||
+                    dependencyState == MutantModuleState.Stopped ||
+                    dependencyState == MutantModuleState.Disposed)
+                {
+                    continue;
+                }
+
+                throw new InvalidOperationException(
+                    string.Format(
+                        "Module '{0}' cannot initialize because dependency '{1}' is in state '{2}'.",
+                        descriptor.ModuleId,
+                        dependencyId,
+                        dependencyState));
             }
         }
 
-        public void UpdateAll()
+        private void EnsureDependenciesStarted(ModuleDescriptor descriptor)
         {
-            if (!_initialized) return;
-
-            foreach (var module in _modules)
-                module.Update();
-        }
-
-        public void LateUpdateAll()
-        {
-            if (!_initialized) return;
-
-            foreach (var module in _modules)
-                module.LateUpdate();
-        }
-
-        public void FixedUpdateAll()
-        {
-            if (!_initialized) return;
-
-            foreach (var module in _modules)
-                module.FixedUpdate();
-        }
-
-        public void DisposeAll()
-        {
-            if (!_initialized)
+            var dependencies = descriptor.Dependencies;
+            if (dependencies == null || dependencies.Count == 0)
             {
-                _modules.Clear();
-                CoreRecorder.Record("ModuleManager", "DisposeAll (not initialized)");
                 return;
             }
 
-            for (int i = _modules.Count - 1; i >= 0; i--)
+            for (int i = 0; i < dependencies.Count; i++)
             {
-                _modules[i].Dispose();
-                CoreRecorder.Record("ModuleManager", $"Dispose<{_modules[i].GetType().Name}>");
-            }
+                var dependencyId = dependencies[i];
+                var dependencyState = GetState(dependencyId);
 
-            _modules.Clear();
-            _initialized = false;
-            CoreRecorder.Record("ModuleManager", "DisposeAll");
+                if (dependencyState == MutantModuleState.Started)
+                {
+                    continue;
+                }
+
+                throw new InvalidOperationException(
+                    string.Format(
+                        "Module '{0}' cannot start because dependency '{1}' is in state '{2}'.",
+                        descriptor.ModuleId,
+                        dependencyId,
+                        dependencyState));
+            }
+        }
+
+        private void TryRunLifecycle(
+            ModuleDescriptor descriptor,
+            string stage,
+            MutantModuleState successState,
+            Action action)
+        {
+            try
+            {
+                action();
+                SetState(descriptor.ModuleId, successState);
+            }
+            catch (Exception exception)
+            {
+                SetState(descriptor.ModuleId, MutantModuleState.Failed);
+                _errors.Add(new ModuleStartupError(descriptor.ModuleId, stage, exception));
+
+                if (descriptor.IsCritical)
+                {
+                    throw new InvalidOperationException(
+                        string.Format("Critical module '{0}' failed during '{1}'.", descriptor.ModuleId, stage),
+                        exception);
+                }
+            }
+        }
+
+        private void SetState(string moduleId, MutantModuleState state)
+        {
+            _states[moduleId] = state;
         }
     }
 }

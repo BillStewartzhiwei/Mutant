@@ -1,0 +1,20 @@
+{
+  "name": "com.mutant.log",
+  "version": "0.1.0",
+  "displayName": "Mutant Log",
+  "description": "Logging runtime, sinks, and module integration for Mutant.",
+  "unity": "2022.3",
+  "dependencies": {
+    "com.mutant.core": "0.2.0"
+  },
+  "author": {
+    "name": "Bill Stewart"
+  },
+  "samples": [
+    {
+      "displayName": "Basic Logging",
+      "description": "Minimal logging sample with installer, console sink, memory sink, and file sink.",
+      "path": "Samples~/Basic Logging"
+    }
+  ]
+}
