@@ -1,5 +1,6 @@
 using System.Collections;
 using Mutant.Core.Bootstrap;
+using Mutant.Core.Diagnostics;
 using Mutant.Core.Modules;
 using NUnit.Framework;
 using UnityEngine;
@@ -13,6 +14,8 @@ namespace Mutant.Core.Tests.PlayMode
         public IEnumerator SetUp()
         {
             ModuleManager.Instance.DisposeAll();
+            CoreRecorder.Clear();
+            CoreRecorder.Enabled = true;
             yield return null;
         }
 
@@ -25,6 +28,8 @@ namespace Mutant.Core.Tests.PlayMode
             yield return null;
 
             ModuleManager.Instance.DisposeAll();
+            CoreRecorder.Enabled = false;
+            CoreRecorder.Clear();
         }
 
         [UnityTest]
@@ -51,6 +56,36 @@ namespace Mutant.Core.Tests.PlayMode
                 "Owner bootstrap destruction should dispose modules exactly once.");
         }
 
+        [UnityTest]
+        public IEnumerator CoreRecorder_Should_Record_Bootstrap_And_Module_Lifecycle()
+        {
+            TrackingModule module = new();
+            ModuleManager.Instance.Register(module);
+
+            GameObject ownerGo = new("RecorderOwnerBootstrap");
+            ownerGo.AddComponent<CoreBootstrap>();
+            yield return null;
+
+            Object.Destroy(ownerGo);
+            yield return null;
+
+            Assert.That(CoreRecorder.GetEntries().Count, Is.GreaterThan(0));
+
+            bool hasOwnerInit = false;
+            bool hasInitAll = false;
+            bool hasDisposeAll = false;
+
+            foreach (CoreRecordEntry entry in CoreRecorder.GetEntries())
+            {
+                hasOwnerInit |= entry.Message.Contains("Owner bootstrap initialized.");
+                hasInitAll |= entry.Message.Contains("InitAll");
+                hasDisposeAll |= entry.Message.Contains("DisposeAll");
+            }
+
+            Assert.That(hasOwnerInit, Is.True, "Recorder should include bootstrap init.");
+            Assert.That(hasInitAll, Is.True, "Recorder should include module init cycle.");
+            Assert.That(hasDisposeAll, Is.True, "Recorder should include module dispose cycle.");
+        }
         private sealed class TrackingModule : IModule
         {
             public int Priority => 0;

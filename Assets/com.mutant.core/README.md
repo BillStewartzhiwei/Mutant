@@ -6,6 +6,7 @@ Mutant Core 是 Mutant 框架的基础运行时包，提供：
 - ModuleManager
 - IModule
 - EventBus
+- CoreRecorder（调试录制）
 
 ## 安装方式
 
@@ -77,3 +78,25 @@ public class DemoEntry : MonoBehaviour
 
 - 保持 `Assets/com.mutant.core/package.json` 与 `Packages/com.mutant.core/package.json` 同步。
 - 若把 Tests 同步到 `Packages/com.mutant.core`，请复核 asmdef 的平台过滤设置。
+
+## CoreRecorder（参考 PLUME Recorder 思路）
+
+`CoreRecorder` 提供轻量级运行时行为录制，默认关闭：
+
+```csharp
+using Mutant.Core.Diagnostics;
+
+CoreRecorder.Enabled = true;
+CoreRecorder.Clear();
+
+// 运行游戏逻辑后
+foreach (var entry in CoreRecorder.GetEntries())
+{
+    Debug.Log($"[{entry.UtcTime:HH:mm:ss}] {entry.Category}: {entry.Message}");
+}
+```
+
+当前会录制：
+- `CoreBootstrap` owner 初始化 / duplicate 销毁 / owner 销毁
+- `ModuleManager` 注册、初始化、销毁、全量生命周期
+- `EventBus` 订阅、取消订阅、发布、清理

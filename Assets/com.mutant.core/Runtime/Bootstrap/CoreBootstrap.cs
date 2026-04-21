@@ -1,4 +1,5 @@
 using UnityEngine;
+using Mutant.Core.Diagnostics;
 using Mutant.Core.Modules;
 
 namespace Mutant.Core.Bootstrap
@@ -14,12 +15,14 @@ namespace Mutant.Core.Bootstrap
         {
             if (_initialized)
             {
+                CoreRecorder.Record("CoreBootstrap", "Duplicate bootstrap detected, destroying instance.");
                 Destroy(gameObject);
                 return;
             }
 
             _initialized = true;
             _isOwner = true;
+            CoreRecorder.Record("CoreBootstrap", "Owner bootstrap initialized.");
 
             if (dontDestroyOnLoad)
                 DontDestroyOnLoad(gameObject);
@@ -46,6 +49,7 @@ namespace Mutant.Core.Bootstrap
         {
             if (_isOwner && _initialized)
             {
+                CoreRecorder.Record("CoreBootstrap", "Owner bootstrap destroying, disposing modules.");
                 ModuleManager.Instance.DisposeAll();
                 _initialized = false;
             }

@@ -25,3 +25,10 @@
 1. `Assets/com.mutant.core/package.json` 与 `Packages/com.mutant.core/package.json` 需要保持版本、描述、作者字段一致。
 2. 若未来将 `Tests` 目录同步到 `Packages/com.mutant.core`，需确保 asmdef 的 `includePlatforms/excludePlatforms` 在 UPM 场景下仍可正确执行。
 3. 发布前建议在 CHANGELOG 记录此防回归测试的覆盖范围，以便子模块升级时验证。
+
+## Recorder 对齐项（参考 PLUME Recorder 方案）
+
+1. 录制默认关闭：`CoreRecorder.Enabled = false`，仅在调试/排障时开启。
+2. 控制内存占用：通过 `CoreRecorder.MaxEntries` 限制缓存条目数量（环形裁剪）。
+3. 录制维度统一：`Category + Message + UtcTime`，方便后续做可视化或导出。
+4. 防回归断言建议：在 PlayMode 用例中校验关键生命周期日志（InitAll/DisposeAll）存在。
